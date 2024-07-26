@@ -12,7 +12,7 @@ class AlbumsService {
   }
 
   async addAlbum({ name, year }) {
-    const id = "album" + nanoid(16);
+    const id = "album-" + nanoid(16);
 
     const query = {
       text: "INSERT INTO albums VALUES ($1, $2, $3) RETURNING album_id",
@@ -21,11 +21,11 @@ class AlbumsService {
 
     const result = await this._pool.query(query);
 
-    if (!result.rows[0].id) {
+    if (!result.rows[0].album_id) {
       throw new InvariantError("Album gagal ditambahkan");
     }
 
-    return result.rows[0].id;
+    return result.rows[0].album_id;
   }
 
   async getAlbumById(id) {
@@ -71,7 +71,7 @@ class AlbumsService {
 
   async deleteAlbumById(id) {
     const query = {
-      text: "DELETE FROM albums WHERE album_id = $1",
+      text: "DELETE FROM albums WHERE album_id = $1 RETURNING album_id",
       values: [id],
     };
 

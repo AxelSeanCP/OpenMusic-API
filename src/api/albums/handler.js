@@ -6,8 +6,8 @@ class AlbumsHandler {
     // Menetapkan konteks "this" supaya "this" pada kelas ini tidak dianggap kelas lain
     this.postAlbumHandler = this.postAlbumHandler.bind(this);
     this.getAlbumByIdHandler = this.getAlbumByIdHandler.bind(this);
-    this.putAlbumByIdHanlder = this.putAlbumByIdHanlder.bind(this);
-    this.deleteAlbumByIdHanlder = this.deleteAlbumByIdHanlder.bind(this);
+    this.putAlbumByIdHandler = this.putAlbumByIdHandler.bind(this);
+    this.deleteAlbumByIdHandler = this.deleteAlbumByIdHandler.bind(this);
   }
 
   async postAlbumHandler(request, h) {
