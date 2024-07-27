@@ -12,7 +12,7 @@ class SongsService {
   }
 
   async addSong({ title, year, performer, genre, duration, albumId }) {
-    const id = "song-" + nanoid(16);
+    const id = `song-${nanoid(16)}`;
 
     const query = {
       text: "INSERT INTO songs VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING song_id",
@@ -28,10 +28,31 @@ class SongsService {
     return result.rows[0].song_id;
   }
 
-  async getSongs() {
-    const result = await this._pool.query(
-      "SELECT song_id, title, performer FROM songs"
-    );
+  async getSongs({ title, performer }) {
+    const query = {
+      text: "SELECT song_id, title, performer FROM songs",
+      values: [],
+    };
+
+    // query parameters
+    if (title || performer) {
+      query.text += " WHERE ";
+
+      const conditions = [];
+      if (title) {
+        conditions.push("title ILIKE $1");
+        query.values.push(`%${title}%`);
+      }
+      if (performer) {
+        conditions.push(`performer ILIKE $${query.values.length + 1}`);
+        query.values.push(`%${performer}%`);
+      }
+
+      query.text += conditions.join(" AND ");
+    }
+
+    const result = await this._pool.query(query);
+
     return result.rows.map(mapSongsToModel);
   }
 

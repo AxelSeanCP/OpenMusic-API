@@ -10,9 +10,6 @@ A project submission from Dicoding's Back End Intermediate class: an API for a s
 - [Installation](#installation)
 - [Usage](#usage)
 - [API Endpoints](#api-endpoints)
-- [Contributing](#contributing)
-- [License](#license)
-- [Contact](#contact)
 
 ## Introduction
 
@@ -20,7 +17,7 @@ OpenMusicV1 is a back-end API developed for a streaming music application. This 
 
 ## Features
 
-- View all albums
+- View albums
 - View all songs
 - Add new albums
 - Add new songs
@@ -34,8 +31,6 @@ OpenMusicV1 is a back-end API developed for a streaming music application. This 
 - Node.js
 - Hapi.js
 - PostgreSQL
-- JWT for authentication
-- Docker (optional)
 
 ## Installation
 
@@ -44,8 +39,9 @@ To run this project locally, follow these steps:
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/OpenMusicV1.git
-   cd OpenMusicV1
+   git clone https://github.com/AxelSeanCP/OpenMusic-API.git
+
+   cd OpenMusic-API
    ```
 
 2. Install dependencies:
@@ -59,14 +55,22 @@ To run this project locally, follow these steps:
    - Create a new PostgreSQL database.
    - Run the database migrations (if any).
 
+   ```bash
+   npm run migrate up
+   ```
+
 4. Configure environment variables:
 
    - Create a `.env` file in the root directory.
-   - Add the necessary environment variables (e.g., database credentials, JWT secret).
+   - Add the necessary environment variables (HOST, PORT, PGUSER, PGHOST, PGPASSWORD, PGDATABASE, PGPORT).
 
 5. Start the server:
    ```bash
-   npm start
+   npm run start:prod
+   ```
+   > for development
+   ```bash
+   npm run start:dev
    ```
 
 ## Usage
