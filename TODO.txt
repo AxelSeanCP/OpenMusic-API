@@ -1,0 +1,4 @@
+
+2. buat service, validator, dan handler untuk fitur baru
+3. tambah exceptions baru
+4. implementasi authorization
