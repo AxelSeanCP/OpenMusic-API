@@ -1,3 +1,5 @@
-
-2. buat service, validator, dan handler untuk fitur baru
-4. implementasi authorization
+1. buat service, validator, dan handler untuk playlist, serta utils map 
+verify song id pas ditambah ke playlist
+2. implementasi authorization
+3. tambah playlist activities di service playlist
+4. tambah service collaborations
