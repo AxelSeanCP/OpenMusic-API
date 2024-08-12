@@ -32,7 +32,7 @@ class PlaylistsService {
   async getPlaylists(owner) {
     const query = {
       text: `SELECT p.playlist_id, p.name, u.username
-      FROM playlist p
+      FROM playlists p
       LEFT JOIN users u ON u.user_id = p.owner
       WHERE p.owner = $1`,
       values: [owner],
@@ -46,7 +46,7 @@ class PlaylistsService {
   async getPlaylistById(id) {
     const query = {
       text: `SELECT p.*, u.username
-        FROM playlist p
+        FROM playlists p
         LEFT JOIN users u ON u.user_id = p.owner
         WHERE p.playlist_id = $1`,
       values: [id],
@@ -67,16 +67,16 @@ class PlaylistsService {
       values: [id],
     };
 
-    const result = await this._pool.query(query);
-
-    if (!result.rows.length) {
-      throw new NotFoundError("Gagal menghapus playlist. Id tidak ditemukan");
-    }
+    await this._pool.query(query);
   }
 
   // Playlist_Songs Service
   async addSongToPlaylist(playlistId, { songId }) {
     const id = `playlist-songs-${nanoid(16)}`;
+
+    if (!(await this.checkSongExists({ songId }))) {
+      throw new NotFoundError("Lagu tidak ditemukan");
+    }
 
     const query = {
       text: "INSERT INTO playlist_songs VALUES ($1, $2, $3) RETURNING playlist_songs_id",
@@ -91,12 +91,12 @@ class PlaylistsService {
   }
 
   async getPlaylistSongs(playlistId) {
-    const playlist = this.getPlaylistById(playlistId);
+    const playlist = await this.getPlaylistById(playlistId);
 
     const query = {
       text: `SELECT s.song_id, s.title, s.performer
       FROM songs s
-      INNER JOIN playlist_song ps ON ps.song_id = s.song_id
+      INNER JOIN playlist_songs ps ON ps.song_id = s.song_id
       WHERE ps.playlist_id = $1`,
       values: [playlistId],
     };
@@ -117,11 +117,18 @@ class PlaylistsService {
       values: [songId],
     };
 
+    await this._pool.query(query);
+  }
+
+  async checkSongExists({ songId }) {
+    const query = {
+      text: "SELECT * FROM songs WHERE song_id = $1",
+      values: [songId],
+    };
+
     const result = await this._pool.query(query);
 
-    if (!result.rows.length) {
-      throw new NotFoundError("Gagal menghapus lagu. Id tidak ditemukan");
-    }
+    return result.rows.length > 0;
   }
 
   // Verifying
