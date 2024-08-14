@@ -1,7 +1,0 @@
-3. test service activities
-4. implementasi collaborations
-    Playlist tampil pada permintaan GET /playlists.
-    Dapat menambahkan lagu ke dalam playlist.
-    Dapat menghapus lagu dari playlist.
-    Dapat melihat daftar lagu yang ada di playlist.
-    Dapat melihat aktifitas playlist (jika menerapkan kriteria opsional ke-2).

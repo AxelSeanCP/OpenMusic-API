@@ -77,7 +77,14 @@ class PlaylistsService {
   async addSongToPlaylist(playlistId, userId, { songId }) {
     const id = `playlist-songs-${nanoid(16)}`;
 
-    if (!(await this.checkSongExists({ songId }))) {
+    const songQuery = {
+      text: "SELECT * FROM songs WHERE song_id = $1",
+      values: [songId],
+    };
+
+    const songResult = await this._pool.query(songQuery);
+
+    if (!songResult.rows.length) {
       throw new NotFoundError("Lagu tidak ditemukan");
     }
 
@@ -122,6 +129,17 @@ class PlaylistsService {
   }
 
   async deleteSongOnPlaylist(playlistId, userId, { songId }) {
+    const songQuery = {
+      text: "SELECT song_id FROM playlist_songs WHERE song_id = $1",
+      values: [songId],
+    };
+
+    const songResult = await this._pool.query(songQuery);
+
+    if (!songResult.rows.length) {
+      throw new InvariantError("Lagu tidak ditemukan");
+    }
+
     const query = {
       text: "DELETE FROM playlist_songs WHERE song_id = $1",
       values: [songId],
@@ -137,14 +155,12 @@ class PlaylistsService {
   }
 
   async checkSongExists({ songId }) {
-    const query = {
-      text: "SELECT * FROM songs WHERE song_id = $1",
-      values: [songId],
-    };
+    const songIdPattern = /^song-[a-zA-Z0-9_-]+$/;
+    const correctId = songIdPattern.test(songId);
 
-    const result = await this._pool.query(query);
-
-    return result.rows.length > 0;
+    if (!correctId) {
+      throw new InvariantError("Id lagu invalid");
+    }
   }
 
   // Verifying

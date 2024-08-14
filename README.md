@@ -1,6 +1,8 @@
-# OpenMusicV1 - Back-End API
+# OpenMusicV2 - Back-End API
 
-A project submission from Dicoding's Back End Intermediate class: an API for a streaming music application that can view added albums and songs.
+![logo](openmusic-logo.jpg)
+
+A project submission from Dicoding's Back End Intermediate class: an API for a streaming music application.
 
 ## Table of Contents
 
@@ -13,18 +15,25 @@ A project submission from Dicoding's Back End Intermediate class: an API for a s
 
 ## Introduction
 
-OpenMusicV1 is a back-end API developed for a streaming music application. This API allows users to view albums and songs that have been added.
+OpenMusicV2 is a back-end API developed for a streaming music application. This API allows users to view albums and songs that have been added. In version 2, users can create private playlists where they can add or remove songs (login required). Playlist activity is also stored as a history, enabling users to see what changes have been made to their playlists. Users can also add collaborators to their playlists, granting the collaborators the same access as the users, except for the ability to delete the playlist.
 
 ## Features
 
-- View albums
-- View all songs
-- Add new albums
-- Add new songs
-- Update album details
-- Update song details
-- Delete albums
-- Delete songs
+- **View Albums**: Browse the collection of available albums.
+- **View All Songs**: Explore the complete list of songs.
+- **Add New Albums**: Create and add new albums to the collection.
+- **Add New Songs**: Create and add new songs to the catalog.
+- **Update Album Details**: Modify existing album information.
+- **Update Song Details**: Modify existing song information.
+- **Delete Albums**: Remove albums from the collection.
+- **Delete Songs**: Remove songs from the catalog.
+- **Add Login & Logout Feature**: Securely authenticate and deauthenticate users.
+- **Add New Playlist**: Create new playlists for personal or shared use.
+- **Add Songs to Playlist**: Include songs in your playlists.
+- **Add Other Users as Collaborators**: Invite other users to collaborate on your playlists.
+- **Delete Songs from Playlist**: Remove songs from your playlists.
+- **Delete Users from Collaborators**: Remove collaborators from your playlists.
+- **Delete Playlist**: Delete entire playlists from your account.
 
 ## Technologies Used
 
@@ -62,7 +71,7 @@ To run this project locally, follow these steps:
 4. Configure environment variables:
 
    - Create a `.env` file in the root directory.
-   - Add the necessary environment variables (HOST, PORT, PGUSER, PGHOST, PGPASSWORD, PGDATABASE, PGPORT).
+   - Add the necessary environment variables (HOST, PORT, PGUSER, PGHOST, PGPASSWORD, PGDATABASE, PGPORT, ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY, ACCESS_TOKEN_AGE).
 
 5. Start the server:
    ```bash
@@ -156,3 +165,125 @@ Once the server is running, you can interact with the API using tools like Postm
 
 - **Delete a song**
   - `DELETE /songs/{id}`
+
+### Users
+
+- **Add a user**
+  - `POST /users`
+  - Request body:
+    ```json
+    {
+      "username": "Your username",
+      "password": "SuperSecretPassword",
+      "fullname": "Your fullname"
+    }
+    ```
+
+### Authentications
+
+- **Authenticate user**
+
+  - `POST /authentications`
+  - Request body:
+    ```json
+    {
+      "username": "string",
+      "password": "string"
+    }
+    ```
+
+- **Update access token**
+
+  - `PUT /authentications`
+  - Request body:
+    ```json
+    {
+      "refreshToken": "string"
+    }
+    ```
+
+- **Delete authentication**
+
+  - `DELETE /authentications`
+  - Request body:
+
+    ```json
+    {
+      "refreshToken": "string"
+    }
+    ```
+
+    ```
+
+    ```
+
+### Playlists
+
+- **Add a new playlist**
+
+  - `POST /playlists`
+  - Request body:
+    ```json
+    {
+      "name": "string"
+    }
+    ```
+
+- **Get all playlists**
+
+  - `GET /playlists`
+
+- **Delete a playlist**
+
+  - `DELETE /playlists/{id}`
+
+- **Add a song to playlist**
+
+  - `POST /playlists/{id}/songs`
+  - Request body:
+    ```json
+    {
+      "songId": "string"
+    }
+    ```
+
+- **Get songs from a playlist**
+
+  - `GET /playlists/{id}/songs`
+
+- **Delete a song from playlist**
+  - `DELETE /playlists/{id}/songs`
+  - Request body:
+    ```json
+    {
+      "songId": "string"
+    }
+    ```
+
+### Activities
+
+- **Get playlist activities**
+  - `GET /playlists/{id}/activities`
+
+### Collaborations
+
+- **Add a collaboration**
+
+  - `POST /collaborations`
+  - Request body:
+    ```json
+    {
+      "playlistId": "string",
+      "userId": "string"
+    }
+    ```
+
+- **Delete a collaboration**
+  - `DELETE /collaborations`
+  - Request body:
+    ```json
+    {
+      "playlistId": "string",
+      "userId": "string"
+    }
+    ```
