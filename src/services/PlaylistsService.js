@@ -7,8 +7,10 @@ const AuthorizationError = require("../exceptions/AuthorizationError");
 const { mapPlaylistsToModel, mapSongToModel } = require("../utils");
 
 class PlaylistsService {
-  constructor() {
+  constructor(activitiesService, collaborationsService) {
     this._pool = new Pool();
+    this._activitiesService = activitiesService;
+    this._collaborationsService = collaborationsService;
   }
 
   // Playlist Service
@@ -34,7 +36,8 @@ class PlaylistsService {
       text: `SELECT p.playlist_id, p.name, u.username
       FROM playlists p
       LEFT JOIN users u ON u.user_id = p.owner
-      WHERE p.owner = $1`,
+      LEFT JOIN collaborations c ON c.playlist_id = p.playlist_id
+      WHERE p.owner = $1 OR c.user_id = $1`,
       values: [owner],
     };
 
@@ -71,7 +74,7 @@ class PlaylistsService {
   }
 
   // Playlist_Songs Service
-  async addSongToPlaylist(playlistId, { songId }) {
+  async addSongToPlaylist(playlistId, userId, { songId }) {
     const id = `playlist-songs-${nanoid(16)}`;
 
     if (!(await this.checkSongExists({ songId }))) {
@@ -88,6 +91,13 @@ class PlaylistsService {
     if (!result.rows[0].playlist_songs_id) {
       throw new InvariantError("Gagal menambahkan lagu ke playlist");
     }
+
+    await this._activitiesService.addActivities(
+      playlistId,
+      userId,
+      { songId },
+      "add"
+    );
   }
 
   async getPlaylistSongs(playlistId) {
@@ -111,13 +121,19 @@ class PlaylistsService {
     };
   }
 
-  async deleteSongOnPlaylist({ songId }) {
+  async deleteSongOnPlaylist(playlistId, userId, { songId }) {
     const query = {
       text: "DELETE FROM playlist_songs WHERE song_id = $1",
       values: [songId],
     };
 
     await this._pool.query(query);
+    await this._activitiesService.addActivities(
+      playlistId,
+      userId,
+      { songId },
+      "delete"
+    );
   }
 
   async checkSongExists({ songId }) {
@@ -160,10 +176,10 @@ class PlaylistsService {
       }
 
       try {
-        // await this._collaborationsService.verifyCollaborator(
-        //   playlistId,
-        //   userId
-        // );
+        await this._collaborationsService.verifyCollaborator(
+          playlistId,
+          userId
+        );
       } catch {
         throw error;
       }

@@ -28,7 +28,7 @@ class SongsHandler {
     const response = h.response({
       status: "success",
       data: {
-        songId: songId,
+        songId,
       },
     });
     response.code(201);
