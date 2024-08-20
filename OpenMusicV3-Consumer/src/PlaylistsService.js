@@ -15,7 +15,7 @@ class PlaylistsService {
     };
 
     const result = await this._pool.query(query);
-    return result.rows;
+    return result.rows[0];
   }
 
   async getPlaylistSongs(playlistId) {
@@ -34,8 +34,11 @@ class PlaylistsService {
     const songs = result.rows;
 
     return {
-      ...playlist,
-      songs: songs.length ? songs : [],
+      playlist: {
+        id: playlist.id,
+        name: playlist.name,
+        songs: songs.length ? songs : [],
+      },
     };
   }
 }

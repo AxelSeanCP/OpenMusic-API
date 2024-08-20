@@ -1,7 +1,6 @@
 /**
  * @type {import('node-pg-migrate').ColumnDefinitions | undefined}
  */
-exports.shorthands = undefined;
 
 /**
  * @param pgm {import('node-pg-migrate').MigrationBuilder}
@@ -27,6 +26,10 @@ exports.up = (pgm) => {
       onDelete: "CASCADE",
     },
   });
+
+  pgm.addConstraint("collaborations", "unique_user_id_playlist_id", {
+    unique: ["user_id", "playlist_id"],
+  });
 };
 
 /**
@@ -35,5 +38,6 @@ exports.up = (pgm) => {
  * @returns {Promise<void> | void}
  */
 exports.down = (pgm) => {
+  pgm.dropConstraint("collaborations", "unique_user_id_playlist_id");
   pgm.dropTable("collaborations");
 };

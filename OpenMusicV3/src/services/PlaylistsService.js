@@ -141,8 +141,8 @@ class PlaylistsService {
     }
 
     const query = {
-      text: "DELETE FROM playlist_songs WHERE song_id = $1",
-      values: [songId],
+      text: "DELETE FROM playlist_songs WHERE song_id = $1 AND user_id = $2",
+      values: [songId, userId],
     };
 
     await this._pool.query(query);

@@ -8,27 +8,27 @@
  * @returns {Promise<void> | void}
  */
 exports.up = (pgm) => {
-  pgm.createTable("playlist_songs", {
-    playlist_songs_id: {
+  pgm.createTable("user_album_likes", {
+    user_album_likes_id: {
       type: "VARCHAR(50)",
       primaryKey: true,
     },
-    playlist_id: {
+    user_id: {
       type: "VARCHAR(50)",
       notNull: true,
-      references: "playlists(playlist_id)",
+      references: "users(user_id)",
       onDelete: "CASCADE",
     },
-    song_id: {
+    album_id: {
       type: "VARCHAR(50)",
-      notNull: true,
-      references: "songs(song_id)",
+      notnull: true,
+      references: '"albums"',
       onDelete: "CASCADE",
     },
   });
 
-  pgm.addConstraint("playlist_songs", "unique_playlist_id_song_id", {
-    unique: ["playlist_id", "song_id"],
+  pgm.addConstraint("user_album_likes", "unique_user_id_album_id", {
+    unique: ["user_id", "album_id"],
   });
 };
 
@@ -38,6 +38,6 @@ exports.up = (pgm) => {
  * @returns {Promise<void> | void}
  */
 exports.down = (pgm) => {
-  pgm.dropConstraint("playlist_songs", "unique_playlist_id_song_id");
-  pgm.dropTable("playlist_songs");
+  pgm.dropConstraint("user_album_likes", "unique_user_id_album_id");
+  pgm.dropTable("user_album_likes");
 };
