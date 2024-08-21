@@ -11,12 +11,12 @@ class AlbumsService {
     this._pool = new Pool();
   }
 
-  async addAlbum({ name, year }) {
+  async addAlbum({ name, year, coverUrl }) {
     const id = `album-${nanoid(16)}`;
 
     const query = {
-      text: "INSERT INTO albums VALUES ($1, $2, $3) RETURNING album_id",
-      values: [id, name, year],
+      text: "INSERT INTO albums VALUES ($1, $2, $3, $4) RETURNING album_id",
+      values: [id, name, year, coverUrl],
     };
 
     const result = await this._pool.query(query);
@@ -140,6 +140,19 @@ class AlbumsService {
 
     if (result.rows.length) {
       throw new InvariantError("Album sudah di like oleh user ini");
+    }
+  }
+
+  async addAlbumCover(albumId, cover) {
+    const query = {
+      text: "UPDATE albums SET cover_url = $1 WHERE album_id = $2",
+      values: [cover, albumId],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (result.rowCount === 0) {
+      throw new InvariantError("Gagal upload album");
     }
   }
 }

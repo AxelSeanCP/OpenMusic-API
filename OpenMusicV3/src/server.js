@@ -2,6 +2,8 @@ require("dotenv").config();
 
 const Hapi = require("@hapi/hapi");
 const jwt = require("@hapi/jwt");
+const Inert = require("@hapi/inert");
+const path = require("path");
 
 // API
 const albums = require("./api/albums");
@@ -22,6 +24,7 @@ const PlaylistsService = require("./services/PlaylistsService");
 const ActivitiesService = require("./services/ActivitiesService");
 const CollaborationsService = require("./services/CollaborationsService");
 const ProducerService = require("./services/rabbitmq/ProducerService");
+const StorageService = require("./services/storage/StorageService");
 
 // Validators
 const AlbumsValidator = require("./validator/albums");
@@ -31,6 +34,7 @@ const AuthenticationsValidator = require("./validator/authentications");
 const PlaylistsValidator = require("./validator/playlists");
 const CollaborationsValidator = require("./validator/collaborations");
 const ExportsValidator = require("./validator/exports");
+const UploadsValidator = require("./validator/uploads");
 
 // Other
 const tokenManager = require("./tokenize/TokenManager");
@@ -48,6 +52,9 @@ const init = async () => {
     activitiesService,
     collaborationsService
   );
+  const storageService = new StorageService(
+    path.resolve(__dirname, "api/albums/file/images")
+  );
 
   const server = Hapi.server({
     port: process.env.PORT,
@@ -63,6 +70,9 @@ const init = async () => {
   await server.register([
     {
       plugin: jwt,
+    },
+    {
+      plugin: Inert,
     },
   ]);
 
@@ -89,6 +99,8 @@ const init = async () => {
       options: {
         service: albumsService,
         validator: AlbumsValidator,
+        storageService,
+        uploadsValidator: UploadsValidator,
       },
     },
     {

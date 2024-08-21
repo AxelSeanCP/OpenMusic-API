@@ -1,7 +1,8 @@
-const mapAlbumToModel = ({ album_id, name, year }) => ({
+const mapAlbumToModel = ({ album_id, name, year, cover_url }) => ({
   id: album_id,
   name,
   year,
+  coverUrl: cover_url,
 });
 
 const mapSongsToModel = ({ song_id, title, performer }) => ({
