@@ -25,6 +25,7 @@ const ActivitiesService = require("./services/ActivitiesService");
 const CollaborationsService = require("./services/CollaborationsService");
 const ProducerService = require("./services/rabbitmq/ProducerService");
 const StorageService = require("./services/storage/StorageService");
+const CacheService = require("./services/redis/CacheService");
 
 // Validators
 const AlbumsValidator = require("./validator/albums");
@@ -42,15 +43,17 @@ const tokenManager = require("./tokenize/TokenManager");
 const ClientError = require("./exceptions/ClientError");
 
 const init = async () => {
-  const albumsService = new AlbumsService();
+  const cacheService = new CacheService();
+  const albumsService = new AlbumsService(cacheService);
   const songsService = new SongsService();
   const usersService = new UsersService();
   const authenticationsService = new AuthenticationsService();
-  const collaborationsService = new CollaborationsService();
+  const collaborationsService = new CollaborationsService(cacheService);
   const activitiesService = new ActivitiesService(collaborationsService);
   const playlistsService = new PlaylistsService(
     activitiesService,
-    collaborationsService
+    collaborationsService,
+    cacheService
   );
   const storageService = new StorageService(
     path.resolve(__dirname, "api/albums/file/images")

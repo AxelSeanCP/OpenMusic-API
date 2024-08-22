@@ -1,6 +1,6 @@
-# OpenMusicV2 - Back-End API
+# OpenMusicV3 - Back-End API
 
-![logo](openmusic-logo.jpg)
+![logo](/OpenMusicV3/openmusic-logo.jpg)
 
 A project submission from Dicoding's Back End Intermediate class: an API for a streaming music application.
 
@@ -15,7 +15,7 @@ A project submission from Dicoding's Back End Intermediate class: an API for a s
 
 ## Introduction
 
-OpenMusicV2 is a back-end API developed for a streaming music application. This API allows users to view albums and songs that have been added. In version 2, users can create private playlists where they can add or remove songs (login required). Playlist activity is also stored as a history, enabling users to see what changes have been made to their playlists. Users can also add collaborators to their playlists, granting the collaborators the same access as the users, except for the ability to delete the playlist.
+OpenMusicV3 is a back-end API developed for a music streaming application. This API allows users to view albums and songs that have been added. In version 2, users can create private playlists where they can add or remove songs (login required). Playlist activity is also stored as history, enabling users to see what changes have been made to their playlists. Users can also add collaborators to their playlists, granting them the same access as the users, except for the ability to delete the playlist. In version 3, users can add, delete, and view likes on albums. Users can also export songs from a playlist of their choice. Additionally, there is a feature to add and view album covers.
 
 ## Features
 
@@ -34,12 +34,19 @@ OpenMusicV2 is a back-end API developed for a streaming music application. This 
 - **Delete Songs from Playlist**: Remove songs from your playlists.
 - **Delete Users from Collaborators**: Remove collaborators from your playlists.
 - **Delete Playlist**: Delete entire playlists from your account.
+- **Add Album Cover**: Add a cover image to an album.
+- **Export Songs from Playlist**: Export songs from your playlists.
+- **Add Likes to Album**: Like an album.
+- **Delete Likes from Album**: Remove likes from an album.
+- **View All Likes from Album**: View all likes on an album.
 
 ## Technologies Used
 
 - Node.js
 - Hapi.js
 - PostgreSQL
+- RabbitMQ
+- Redis
 
 ## Installation
 
@@ -80,6 +87,10 @@ To run this project locally, follow these steps:
    > for development
    ```bash
    npm run start:dev
+   ```
+   or
+   ```bash
+   npm run dev
    ```
 
 ## Usage
@@ -287,3 +298,40 @@ Once the server is running, you can interact with the API using tools like Postm
       "userId": "string"
     }
     ```
+
+### Exports
+
+- **Export songs from playlist**
+  - `POST /exports/playlists/{playlistId}`
+  - Request body:
+    ```json
+    {
+      "targetEmail": "string"
+    }
+    ```
+
+### Uploads
+
+- **Upload album cover**
+  - `POST /albums/{id}/covers`
+  - Request body:
+    ```json
+    {
+      "cover": "file"
+    }
+    ```
+
+> You can view the album cover from the `GET albums/{id}` endpoint in the _coverUrl_ properties.
+
+### Likes
+
+- **Add likes to an album**
+
+  - `POST /albums/{id}/likes`
+
+- **Delete likes from an album**
+
+  - `DELETE /albums/{id}/likes`
+
+- **Get likes from an album**
+  - `GET /albums/{id}/likes`

@@ -4,8 +4,9 @@ const InvariantError = require("../exceptions/InvariantError");
 const NotFoundError = require("../exceptions/NotFoundError");
 
 class CollaborationsService {
-  constructor() {
+  constructor(cacheService) {
     this._pool = new Pool();
+    this._cacheService = cacheService;
   }
 
   async addCollaboration(playlistId, userId) {
@@ -24,6 +25,8 @@ class CollaborationsService {
       throw new InvariantError("Kolaborasi gagal ditambahkan");
     }
 
+    await this._cacheService.delete(`playlists:${userId}`);
+
     return result.rows[0].collaboration_id;
   }
 
@@ -38,6 +41,8 @@ class CollaborationsService {
     if (!result.rows.length) {
       throw new InvariantError("Kolaborasi gagal dihapus");
     }
+
+    await this._cacheService.delete(`playlists:${userId}`);
   }
 
   async verifyCollaborator(playlistId, userId) {

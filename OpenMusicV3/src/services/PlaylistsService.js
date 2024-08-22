@@ -7,10 +7,11 @@ const AuthorizationError = require("../exceptions/AuthorizationError");
 const { mapPlaylistsToModel, mapSongToModel } = require("../utils");
 
 class PlaylistsService {
-  constructor(activitiesService, collaborationsService) {
+  constructor(activitiesService, collaborationsService, cacheService) {
     this._pool = new Pool();
     this._activitiesService = activitiesService;
     this._collaborationsService = collaborationsService;
+    this._cacheService = cacheService;
   }
 
   // Playlist Service
@@ -23,54 +24,83 @@ class PlaylistsService {
     };
 
     const result = await this._pool.query(query);
+    const playlistId = result.rows[0].playlist_id;
 
-    if (!result.rows[0].playlist_id) {
+    if (!playlistId) {
       throw new InvariantError("Gagal menambahkan playlist");
     }
 
-    return result.rows[0].playlist_id;
+    await this._cacheService.delete(`playlists:${owner}`);
+    return playlistId;
   }
 
   async getPlaylists(owner) {
-    const query = {
-      text: `SELECT p.playlist_id, p.name, u.username
-      FROM playlists p
-      LEFT JOIN users u ON u.user_id = p.owner
-      LEFT JOIN collaborations c ON c.playlist_id = p.playlist_id
-      WHERE p.owner = $1 OR c.user_id = $1`,
-      values: [owner],
-    };
+    try {
+      const result = await this._cacheService.get(`playlists:${owner}`);
+      return JSON.parse(result);
+    } catch {
+      const query = {
+        text: `SELECT p.playlist_id, p.name, u.username
+        FROM playlists p
+        LEFT JOIN users u ON u.user_id = p.owner
+        LEFT JOIN collaborations c ON c.playlist_id = p.playlist_id
+        WHERE p.owner = $1 OR c.user_id = $1`,
+        values: [owner],
+      };
 
-    const result = await this._pool.query(query);
+      const result = await this._pool.query(query);
+      const playlists = result.rows.map(mapPlaylistsToModel);
 
-    return result.rows.map(mapPlaylistsToModel);
+      await this._cacheService.set(
+        `playlists:${owner}`,
+        JSON.stringify(playlists)
+      );
+
+      return playlists;
+    }
   }
 
   async getPlaylistById(id) {
+    try {
+      const result = await this._cacheService.get(`playlist:${id}`);
+      return JSON.parse(result);
+    } catch {
+      const query = {
+        text: `SELECT p.*, u.username
+          FROM playlists p
+          LEFT JOIN users u ON u.user_id = p.owner
+          WHERE p.playlist_id = $1`,
+        values: [id],
+      };
+
+      const result = await this._pool.query(query);
+
+      if (!result.rows.length) {
+        throw new NotFoundError("Playlist tidak ditemukan");
+      }
+
+      const playlist = result.rows.map(mapPlaylistsToModel)[0];
+      await this._cacheService.set(`playlist:${id}`, JSON.stringify(playlist));
+
+      return playlist;
+    }
+  }
+
+  async deletePlaylist(id) {
     const query = {
-      text: `SELECT p.*, u.username
-        FROM playlists p
-        LEFT JOIN users u ON u.user_id = p.owner
-        WHERE p.playlist_id = $1`,
+      text: "DELETE FROM playlists WHERE playlist_id = $1 RETURNING playlist_id, owner",
       values: [id],
     };
 
     const result = await this._pool.query(query);
 
     if (!result.rows.length) {
-      throw new NotFoundError("Playlist tidak ditemukan");
+      throw new NotFoundError("Gagal hapus playlist. Id tidak ditemukan");
     }
 
-    return result.rows.map(mapPlaylistsToModel)[0];
-  }
-
-  async deletePlaylist(id) {
-    const query = {
-      text: "DELETE FROM playlists WHERE playlist_id = $1",
-      values: [id],
-    };
-
-    await this._pool.query(query);
+    const { owner } = result.rows;
+    await this._cacheService.delete(`playlist:${id}`);
+    await this._cacheService.delete(`playlists:${owner}`);
   }
 
   // Playlist_Songs Service
@@ -105,27 +135,43 @@ class PlaylistsService {
       { songId },
       "add"
     );
+
+    await this._cacheService.delete(`playlist_songs:${playlistId}`);
   }
 
   async getPlaylistSongs(playlistId) {
-    const playlist = await this.getPlaylistById(playlistId);
+    try {
+      const result = await this._cacheService.get(
+        `playlist_songs:${playlistId}`
+      );
+      return JSON.parse(result);
+    } catch {
+      const playlist = await this.getPlaylistById(playlistId);
 
-    const query = {
-      text: `SELECT s.song_id, s.title, s.performer
+      const query = {
+        text: `SELECT s.song_id, s.title, s.performer
       FROM songs s
       INNER JOIN playlist_songs ps ON ps.song_id = s.song_id
       WHERE ps.playlist_id = $1`,
-      values: [playlistId],
-    };
+        values: [playlistId],
+      };
 
-    const result = await this._pool.query(query);
+      const result = await this._pool.query(query);
 
-    const songs = result.rows.map(mapSongToModel);
+      const songs = result.rows.map(mapSongToModel);
 
-    return {
-      ...playlist,
-      songs: songs.length ? songs : [],
-    };
+      const playlistSongs = {
+        ...playlist,
+        songs: songs.length ? songs : [],
+      };
+
+      await this._cacheService.set(
+        `playlist_songs:${playlistId}`,
+        JSON.stringify(playlistSongs)
+      );
+
+      return playlistSongs;
+    }
   }
 
   async deleteSongOnPlaylist(playlistId, userId, { songId }) {
@@ -141,8 +187,8 @@ class PlaylistsService {
     }
 
     const query = {
-      text: "DELETE FROM playlist_songs WHERE song_id = $1 AND user_id = $2",
-      values: [songId, userId],
+      text: "DELETE FROM playlist_songs WHERE song_id = $1 AND playlist_id = $2",
+      values: [songId, playlistId],
     };
 
     await this._pool.query(query);
@@ -152,6 +198,8 @@ class PlaylistsService {
       { songId },
       "delete"
     );
+
+    await this._cacheService.delete(`playlist_songs:${playlistId}`);
   }
 
   async checkSongExists({ songId }) {
